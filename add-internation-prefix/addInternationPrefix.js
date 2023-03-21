@@ -1,24 +1,30 @@
 async function transformEvent(event) {
-    const country = event.context?.traits?.country;
+    const country = event.context?.traits?.address?.country;
     const phone = event.context?.traits?.phone;
 
     if (country && phone) {
-        const response = await fetch(`https://restcountries.com/v2/name/${country}?fullText=true&fields=callingCodes`);
-        const internationalCode = response?.[0]?.callingCodes?.[0] || "";
-        event.context.traits.internationalCode = internationalCode;
-        event.context.traits.formattedPhone = addInternationalCode(phone, internationalCode);
+        const response = await fetch(`https://restcountries.com/v3.1/name/${country}?fullText=true&fields=idd`);
+
+        const root = response?.[0]?.idd?.root || "";
+        const suffix = response?.[0]?.idd?.suffixes[0] || "";
+
+        const internationalDialingCode = root + suffix;
+        event.context.traits.internationalDialingCode = internationalDialingCode;
+        event.context.traits.formattedPhone = addInternationalDialingCode(phone, internationalDialingCode);
     }
 
     return event;
 }
 
-function addInternationalCode(phoneNumber, internationalCode) {
-  const formattedPhone = phoneNumber.startsWith("+") ? phoneNumber : `+${phoneNumber}`;
-  if (formattedPhone.startsWith(`+${internationalCode}`)) {
-    return formattedPhone;
-  } else {
-    return `+${internationalCode}${formattedPhone.slice(1)}`;
-  }
+function addInternationalDialingCode(phoneNumber, internationalDialingCode) {
+    const formattedPhone = phoneNumber.startsWith("+") ? phoneNumber : `+${phoneNumber}`;
+    const formattedInternationalCode = internationalDialingCode.startsWith("+") ? internationalDialingCode : `+${internationalDialingCode}`;
+
+    if (formattedPhone.startsWith(formattedInternationalCode)) {
+        return formattedPhone;
+    } else {
+        return `${formattedInternationalCode}${formattedPhone.slice(1)}`;
+    }
 }
 
-module.exports = { transformEvent, addInternationalCode };
+module.exports = { transformEvent, addinternationalDialingCode  };
