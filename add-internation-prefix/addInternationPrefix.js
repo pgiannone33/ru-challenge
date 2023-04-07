@@ -27,4 +27,4 @@ function addInternationalDialingCode(phoneNumber, internationalDialingCode) {
     }
 }
 
-module.exports = { transformEvent, addinternationalDialingCode  };
+module.exports = { transformEvent, addInternationalDialingCode };
